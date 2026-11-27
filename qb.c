@@ -57,11 +57,20 @@ void qb_compile_to_obj(const char* src) {
     if (fname != NULL) {
         *fname = '\0';
     }
-    
-    if (asprintf(&obj, "%s%s.o", QB_BUILD_DIR, strrchr(src_c, '/')) == -1) {
-        qb_log_error("failed to format output directory");
-        goto clean_error;
+
+    if (strrchr(src_c, '/')) {
+        if (asprintf(&obj, "%s%s.o", QB_BUILD_DIR, strrchr(src_c, '/')) == -1) {
+	        qb_log_error("failed to format output directory");
+        	goto clean_error;
+
+        }
+    } else {
+        if (asprintf(&obj, "%s/%s.o", QB_BUILD_DIR, src_c) == -1) {
+	        qb_log_error("failed to format output directory");
+        	goto clean_error;
+        }
     }
+
 
     #ifdef QB_INCLUDE
     int result = asprintf(&sh, "%s -I%s %s -c %s -o %s", cc, QB_INCLUDE, flags, src, obj);
