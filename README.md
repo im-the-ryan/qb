@@ -39,7 +39,7 @@ Define C++ flags. Flags should be written like normal flags, beginning with a ``
 #define QB_CXXFLAGS "c++ flags"
 ```
 
-Define the build directory where the object files will be created. It is important to note that this directory must be created before running ```./qb``` otherwise it will raise an error. Automatic build directory creation will be implemented soon.
+Define the build directory where the object files will be created. If the build directory doesn't exist, it will be created.
 ```
 #define QB_BUILD_DIR "build directory"
 ```

@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "qb.h"
 
 void qb_compile_to_obj(const char *);
@@ -12,7 +14,14 @@ void qb_compile_to_exe();
 #define qb_log_info(e, ...)     fprintf(stderr, "\e[0;32m%-5s\033[90m %s:%-3d \e[0m" e "\n", "INFO", __FILE__, __LINE__, ##__VA_ARGS__);
 #define qb_log_debug(e, ...)    fprintf(stderr, "\e[0;36m%-5s\033[90m %s:%-3d \e[0m" e "\n", "DEBUG", __FILE__, __LINE__, ##__VA_ARGS__);
 
-int main(int argc, char *argv[]) {
+int main() {
+    struct stat build;
+	if (stat(QB_BUILD_DIR, &build)) {
+        if (mkdir(QB_BUILD_DIR, 0777) == -1) {
+            qb_log_error("couldn't create dir %s", QB_BUILD_DIR);
+        }
+    }
+    
 	#ifndef QB_TARGET
     qb_log_error("no target defined");
     #endif
@@ -121,7 +130,7 @@ void qb_compile_to_exe() {
     
     struct dirent *entry;
     while ((entry = readdir(obj)) != NULL) {
-        if (entry->d_name[0] != '.' && entry->d_type == DT_REG) {
+        if (entry->d_name[0] != '.' && entry->d_type == DT_REG && strstr(entry->d_name, ".o")) {
             char *temp = realloc(files, strlen(files) + strlen(entry->d_name) + strlen(QB_BUILD_DIR) + 3);
             if (!temp) {
                 free(files);
@@ -139,7 +148,7 @@ void qb_compile_to_exe() {
         }
     }
 
-    if (!asprintf(&sh, "g++%s -o %s %s", files, QB_TARGET, QB_LDFLAGS)) {
+    if (asprintf(&sh, "g++%s -o %s/%s %s", files, QB_BUILD_DIR, QB_TARGET, QB_LDFLAGS) == -1) {
         free(files);
         free(sh);
         qb_log_error("failed to format compile command");
